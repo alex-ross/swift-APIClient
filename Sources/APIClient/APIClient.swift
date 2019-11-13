@@ -19,6 +19,7 @@ public struct APIClient {
         urlComponents.scheme = baseURL.scheme
         urlComponents.host = baseURL.host
         urlComponents.path = baseURL.path
+        urlComponents.port = baseURL.port
         urlComponents.queryItems = request.queryItems
 
         guard let url = urlComponents.url?.appendingPathComponent(request.path) else {
