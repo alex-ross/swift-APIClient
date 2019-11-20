@@ -13,14 +13,26 @@ public struct APIClient {
         self.baseURL = url
     }
 
-    public func perform(_ request: APIRequest, _ completion: @escaping APIClientCompletion) {
-
+    /// Execute the api request
+    /// - Parameters:
+    ///   - request: The request to execute.
+    ///   - encodePlusSignInUrlQuery: Set to true if you would like to encode plus sign in url.
+    ///     Otherwise it will not be encoded and it will then be decoded as a space in the server
+    ///   - completion: Completion block that will be executed when the URL did finish.
+    public func perform(_ request: APIRequest, encodePlusSignInUrlQuery: Bool = false, _ completion: @escaping APIClientCompletion) {
         var urlComponents = URLComponents()
         urlComponents.scheme = baseURL.scheme
         urlComponents.host = baseURL.host
         urlComponents.path = baseURL.path
         urlComponents.port = baseURL.port
         urlComponents.queryItems = request.queryItems
+
+        if encodePlusSignInUrlQuery {
+            urlComponents.percentEncodedQuery  = urlComponents
+                .percentEncodedQuery?
+                .replacingOccurrences(of: "+", with: "%2B")
+        }
+
 
         guard let url = urlComponents.url?.appendingPathComponent(request.path) else {
             completion(.failure(.invalidURL)); return
