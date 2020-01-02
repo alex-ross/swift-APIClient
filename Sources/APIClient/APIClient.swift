@@ -3,14 +3,14 @@ import Foundation
 public typealias APIResult<Body> = Result<APIResponse<Body>, APIError>
 
 public struct APIClient {
-
     public typealias APIClientCompletion = (APIResult<Data?>) -> Void
 
-    private let session = URLSession.shared
+    private let session: URLSession
     private let baseURL: URL
 
-    public init(baseUrl url: URL) {
-        self.baseURL = url
+    public init(baseUrl url: URL, session: URLSession = .shared) {
+        baseURL = url
+        self.session = session
     }
 
     /// Execute the api request
@@ -28,11 +28,10 @@ public struct APIClient {
         urlComponents.queryItems = request.queryItems
 
         if encodePlusSignInUrlQuery {
-            urlComponents.percentEncodedQuery  = urlComponents
+            urlComponents.percentEncodedQuery = urlComponents
                 .percentEncodedQuery?
                 .replacingOccurrences(of: "+", with: "%2B")
         }
-
 
         guard let url = urlComponents.url?.appendingPathComponent(request.path) else {
             completion(.failure(.invalidURL)); return
@@ -44,9 +43,10 @@ public struct APIClient {
 
         request.headers?.forEach { urlRequest.addValue($0.value, forHTTPHeaderField: $0.field) }
 
-        let task = session.dataTask(with: urlRequest) { (data, response, error) in
+        let task = session.dataTask(with: urlRequest) { data, response, error in
             guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(.requestFailed)); return
+                completion(.failure(.requestFailed(error)))
+                return
             }
             completion(.success(APIResponse<Data?>(statusCode: httpResponse.statusCode, body: data)))
         }
